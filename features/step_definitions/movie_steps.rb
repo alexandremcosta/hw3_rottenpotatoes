@@ -22,8 +22,52 @@ end
 #  "When I uncheck the following ratings: PG, G, R"
 #  "When I check the following ratings: G"
 
-When /I (un)?check the following ratings: (.*)/ do |uncheck, rating_list|
+When /I check the following ratings: (.*)/ do |rating_list|
+  rating_list = rating_list.split(', ')
+  rating_list.each do |r|
+    r = 'ratings_' + r
+    check(r)
+  end
   # HINT: use String#split to split up the rating_list, then
   #   iterate over the ratings and reuse the "When I check..." or
   #   "When I uncheck..." steps in lines 89-95 of web_steps.rb
 end
+
+When /I don't check any ratings/ do
+  rating_list = Movie.all_ratings
+  rating_list.each do |r|
+    r = 'ratings_' + r
+    uncheck(r)
+  end
+end
+
+When /I press (.*)/ do |button|
+  click_button(button)
+end
+
+Then /I should (not )?see (.*)/ do |no_content, text|
+  if text =~ /all of the movies/
+    Movie.all.each do |m|
+      m = m.title
+      assert page.has_content?(m)
+    end
+  elsif text =~ /nothing at all/
+    Movie.all.each do |m|
+      m = m.title
+      assert page.has_no_content?(m)
+    end
+  else
+    text = text.split(', ')
+    text.each do |t|
+      if no_content
+        assert page.has_no_content?(t)
+      else
+        assert page.has_content?(t)
+      end
+    end
+  end
+end
+
+#Then /I should see (all of the movies|nothing)/ do |content|
+#end
+
